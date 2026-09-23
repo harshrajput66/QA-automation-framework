@@ -1,19 +1,11 @@
-"""
-Test data constants and sample file paths for the test suite.
-"""
-import os
-import tempfile
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
-
-# Valid test CSV path (existing sample data)
 VALID_CSV_PATH = DATA_DIR / "kaggle_sales_raw.csv"
 
 
-def create_valid_test_csv(tmp_path: Path) -> Path:
-    """Create a minimal valid CSV file for testing uploads."""
+def create_valid_test_csv(tmp_path):
     csv_content = (
         "Row ID,Order ID,Order Date,Ship Date,Ship Mode,Customer ID,"
         "Customer Name,Segment,Country,City,State,Postal Code,Region,"
@@ -32,22 +24,19 @@ def create_valid_test_csv(tmp_path: Path) -> Path:
     return csv_path
 
 
-def create_invalid_csv(tmp_path: Path) -> Path:
-    """Create an invalid CSV file (bad structure)."""
+def create_invalid_csv(tmp_path):
     csv_path = tmp_path / "invalid.csv"
     csv_path.write_text("not,a,valid,csv\nwith,wrong,columns,here\n", encoding="utf-8")
     return csv_path
 
 
-def create_empty_file(tmp_path: Path) -> Path:
-    """Create an empty file."""
+def create_empty_file(tmp_path):
     empty_path = tmp_path / "empty.csv"
     empty_path.write_text("", encoding="utf-8")
     return empty_path
 
 
-def create_non_csv_file(tmp_path: Path) -> Path:
-    """Create a non-CSV file (e.g., .txt)."""
+def create_non_csv_file(tmp_path):
     txt_path = tmp_path / "document.txt"
     txt_path.write_text("This is not a CSV file.", encoding="utf-8")
     return txt_path
