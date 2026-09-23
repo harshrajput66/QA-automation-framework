@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Data QA Framework</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1923;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        /* Top navbar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 14px 32px;
+        }
+        .navbar h1 { font-size: 1.2rem; color: #4fc3f7; }
+        .navbar .user-info { display: flex; align-items: center; gap: 16px; }
+        .navbar .user-info span { color: #aaa; font-size: 0.9rem; }
+        .btn-logout {
+            padding: 8px 18px;
+            background: rgba(244,67,54,0.2);
+            border: 1px solid rgba(244,67,54,0.3);
+            color: #ef9a9a;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(244,67,54,0.35); }
+
+        /* Main container */
+        .container { max-width: 960px; margin: 32px auto; padding: 0 24px; }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .status-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-chip.active { background: rgba(76,175,80,0.2); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
+        .status-chip.inactive { background: rgba(255,255,255,0.05); color: #777; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .card h2 { color: #4fc3f7; font-size: 1.1rem; margin-bottom: 16px; }
+        .card p { color: #999; font-size: 0.9rem; margin-bottom: 12px; }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary { background: linear-gradient(135deg, #4fc3f7, #0288d1); color: #fff; }
+        .btn-success { background: linear-gradient(135deg, #66bb6a, #2e7d32); color: #fff; }
+        .btn-info    { background: linear-gradient(135deg, #ab47bc, #7b1fa2); color: #fff; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        /* File input */
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .file-input-wrapper input[type="file"] {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: #ccc;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Results table */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        .results-table th {
+            background: rgba(79,195,247,0.15);
+            color: #4fc3f7;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .results-table td {
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .status-pass { color: #81c784; font-weight: 600; }
+        .status-fail { color: #ef9a9a; font-weight: 600; }
+
+        /* Summary */
+        .summary-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+        .summary-item {
+            padding: 16px 24px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 120px;
+        }
+        .summary-item.total  { background: rgba(79,195,247,0.12); border: 1px solid rgba(79,195,247,0.2); }
+        .summary-item.passed { background: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.2); }
+        .summary-item.failed { background: rgba(244,67,54,0.12); border: 1px solid rgba(244,67,54,0.2); }
+        .summary-item .number { font-size: 1.8rem; font-weight: 700; }
+        .summary-item .label  { font-size: 0.8rem; color: #999; margin-top: 4px; }
+        .summary-item.total  .number { color: #4fc3f7; }
+        .summary-item.passed .number { color: #81c784; }
+        .summary-item.failed .number { color: #ef9a9a; }
+
+        /* Toast / feedback */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .toast.success { background: #1b5e20; color: #c8e6c9; border: 1px solid #2e7d32; }
+        .toast.error   { background: #b71c1c; color: #ffcdd2; border: 1px solid #c62828; }
+    </style>
+</head>
+<body>
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <h1>Data QA Framework</h1>
+        <div class="user-info">
+            <span id="nav-username">Welcome, {{ username }}</span>
+            <form action="/api/logout" method="POST" style="display:inline;">
+                <button type="submit" class="btn-logout" id="logout-button">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Status bar -->
+        <div class="status-bar">
+            <span class="status-chip {{ 'active' if state.csv_exists else 'inactive' }}" id="status-csv">
+                CSV: {{ "Ready" if state.get('csv_exists', false) else "Not uploaded" }}
+            </span>
+            <span class="status-chip {{ 'active' if state.validated else 'inactive' }}" id="status-validated">
+                Validation: {{ "Complete" if state.validated else "Not run" }}
+            </span>
+            <span class="status-chip {{ 'active' if state.report_generated else 'inactive' }}" id="status-report">
+                Report: {{ "Generated" if state.report_generated else "Not generated" }}
+            </span>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="card" id="upload-section">
+            <h2>📁 Upload Data</h2>
+            <p>Upload a CSV file to use as the data source for validation.</p>
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="file-input-wrapper">
+                    <input type="file" name="file" id="file-input" accept=".csv">
+                    <button type="submit" class="btn btn-primary" id="upload-button">Upload</button>
+                </div>
+            </form>
+            <div id="upload-message" style="margin-top: 8px; font-size: 0.9rem;"></div>
+        </div>
+
+        <!-- Validation Card -->
+        <div class="card" id="validation-section">
+            <h2>🔍 Run Validation</h2>
+            <p>Execute the full data pipeline: ETL → SQL checks → Pandas checks.</p>
+            <button class="btn btn-primary" id="validate-button" onclick="runValidation()">Start Validation</button>
+            <div id="validation-message" style="margin-top: 8px; font-size: 0.9rem;"></div>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card" id="results-section" style="display: {{ 'block' if state.validated else 'none' }};">
+            <h2>📊 Validation Results</h2>
+            <div class="summary-row" id="summary-row">
+                <!-- Populated by JS -->
+            </div>
+            <table class="results-table" id="results-table">
+                <thead>
+                    <tr>
+                        <th>Test ID</th>
+                        <th>Test Name</th>
+                        <th>Expected</th>
+                        <th>Actual</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Report Card -->
+        <div class="card" id="report-section">
+            <h2>📝 Generate Report</h2>
+            <p>Create the Excel QA execution report and test case document.</p>
+            <button class="btn btn-success" id="report-button" onclick="generateReport()">Generate Report</button>
+            <a href="/api/report/download" class="btn btn-info" id="download-button" style="display: {{ 'inline-block' if state.report_generated else 'none' }}; text-decoration: none;">Download Report</a>
+            <div id="report-message" style="margin-top: 8px; font-size: 0.9rem;"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Toast notification
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        // Upload form
+        document.getElementById('upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('file-input');
+            if (!fileInput.files.length) {
+                showToast('Please select a file', 'error');
+                return;
+            }
+            formData.append('file', fileInput.files[0]);
+            const msgEl = document.getElementById('upload-message');
+            msgEl.textContent = 'Uploading...';
+            msgEl.style.color = '#4fc3f7';
+
+            try {
+                const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await resp.json();
+                if (resp.ok) {
+                    msgEl.textContent = '✅ ' + data.message;
+                    msgEl.style.color = '#81c784';
+                    showToast('File uploaded successfully', 'success');
+                } else {
+                    msgEl.textContent = '❌ ' + data.error;
+                    msgEl.style.color = '#ef9a9a';
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                msgEl.textContent = '❌ Upload failed';
+                msgEl.style.color = '#ef9a9a';
+            }
+        });
+
+        // Validation
+        async function runValidation() {
+            const btn = document.getElementById('validate-button');
+            const msgEl = document.getElementById('validation-message');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+            msgEl.textContent = 'Running validation pipeline...';
+            msgEl.style.color = '#4fc3f7';
+
+            try {
+                const resp = await fetch('/api/validate', { method: 'POST' });
+                const data = await resp.json();
+                if (resp.ok) {
+                    msgEl.textContent = '✅ ' + data.message + ' — ' + data.passed + ' passed, ' + data.failed + ' failed';
+                    msgEl.style.color = '#81c784';
+                    showToast('Validation completed', 'success');
+                    loadResults();
+                } else {
+                    msgEl.textContent = '❌ ' + data.error;
+                    msgEl.style.color = '#ef9a9a';
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                msgEl.textContent = '❌ Validation failed';
+                msgEl.style.color = '#ef9a9a';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Start Validation';
+        }
+
+        // Load results
+        async function loadResults() {
+            try {
+                const resp = await fetch('/api/results');
+                if (!resp.ok) return;
+                const data = await resp.json();
+
+                document.getElementById('results-section').style.display = 'block';
+
+                // Summary
+                const summaryRow = document.getElementById('summary-row');
+                summaryRow.innerHTML = `
+                    <div class="summary-item total"><div class="number">${data.total_tests}</div><div class="label">Total</div></div>
+                    <div class="summary-item passed"><div class="number">${data.passed}</div><div class="label">Passed</div></div>
+                    <div class="summary-item failed"><div class="number">${data.failed}</div><div class="label">Failed</div></div>
+                `;
+
+                // Table
+                const tbody = document.getElementById('results-body');
+                tbody.innerHTML = '';
+                data.results.forEach(r => {
+                    const statusClass = r.status === 'PASS' ? 'status-pass' : 'status-fail';
+                    tbody.innerHTML += `<tr>
+                        <td>${r.test_id}</td>
+                        <td>${r.test_name}</td>
+                        <td>${r.expected}</td>
+                        <td>${r.result}</td>
+                        <td class="${statusClass}">${r.status}</td>
+                    </tr>`;
+                });
+            } catch (err) {
+                console.error('Failed to load results:', err);
+            }
+        }
+
+        // Generate report
+        async function generateReport() {
+            const btn = document.getElementById('report-button');
+            const msgEl = document.getElementById('report-message');
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+
+            try {
+                const resp = await fetch('/api/report', { method: 'POST' });
+                const data = await resp.json();
+                if (resp.ok) {
+                    msgEl.textContent = '✅ ' + data.message;
+                    msgEl.style.color = '#81c784';
+                    document.getElementById('download-button').style.display = 'inline-block';
+                    showToast('Report generated', 'success');
+                } else {
+                    msgEl.textContent = '❌ ' + data.error;
+                    msgEl.style.color = '#ef9a9a';
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                msgEl.textContent = '❌ Report generation failed';
+                msgEl.style.color = '#ef9a9a';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Generate Report';
+        }
+
+        // Load results on page load if already validated
+        {% if state.validated %}
+        loadResults();
+        {% endif %}
+    </script>
+</body>
+</html>

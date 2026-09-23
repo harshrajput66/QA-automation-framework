@@ -1,0 +1,35 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+
+# Data files (generated at runtime)
+data/*.csv
+data/*.db
+
+# Generated reports
+QA_Test_Execution_Report.xlsx
+TestCases.xlsx
+
+# Test artifacts
+test-results/
+.pytest_cache/
+htmlcov/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Playwright
+playwright-report/
+
+# Misc
+*.log
